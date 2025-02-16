@@ -7,6 +7,6 @@ lib/
 lib64
 pyvenv.cfg
 
-# vim
+# caches
 *.swp
-
+__pycache__/
