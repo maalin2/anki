@@ -5,17 +5,21 @@ from aqt.utils import showInfo, qconnect
 # qt component
 from aqt.qt import QAction
 
-# callback
-def on_test_action():
-    showInfo("hello world")
+from .create_note import create_note
 
-# add item to main window
+# callback
+def handle_note():
+    create_note('test note', 'test note\'s answer')
+    showInfo("new note succesfully created")
+
+# add dropdown item to main window
 def setup_menu():
     if not hasattr(mw.form, 'menuTools'):
         print('menuTools not ready yet')
 
-    action = QAction("test item", mw)  
-    qconnect(action.triggered, on_test_action)  
+    # create tools thingy and use callback 
+    action = QAction("create test note", mw)  
+    qconnect(action.triggered, handle_note)  
     mw.form.menuTools.addAction(action)  
 
 # load 
