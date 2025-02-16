@@ -1,0 +1,12 @@
+.env
+
+# venv stuff
+bin/
+include/
+lib/
+lib64
+pyvenv.cfg
+
+# vim
+*.swp
+
