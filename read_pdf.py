@@ -1,19 +1,36 @@
-from langchain_community.document_loaders import PyPDFLoader
-import asyncio
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+import pymupdf
 
-async def main():
-    path = os.getenv('FILE_PATH')
+def ask_gemini():
+    ""ask nicely"""
+    return 'i dont know'
+
+def read_pdf(doc):
+    """read pages as images"""
+    paths = []
+    
+    for i, p in enumerate(doc):
+        img = p.get_pixmap()
+        # TODO: parameterize folder, path name to organize slide decks 
+        path = f'./img/page-{i}.png'
+        img.save(path)
+        paths.append(path)
+        print(f'saved {path}')
+
+    return paths
+    
+def main():
+    # get from .env file
+    path = os.environ.get('FILE_PATH')
+    key = os.environ.get('GEMINI_KEY')
     pages = []
 
-    loader = PyPDFLoader(path)
-    async for page in loader.alazy_load():
-        pages.append(page)
-
-    for page in pages:
-        print(page.page_content.strip())
+    doc = pymupdf.open(path)
+    pages = read_pdf(doc)
+    for p in pages:
+        ask_gemini(p)
 
 if __name__ == '__main__':
     load_dotenv()
-    asyncio.run(main())
+    main()

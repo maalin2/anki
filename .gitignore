@@ -1,3 +1,10 @@
+# dont worry about it
+TODO 
+
+# binary
+*.pdf
+img/
+
 .env
 
 # venv stuff
