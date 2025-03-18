@@ -26,9 +26,28 @@ def read_pdf(doc):
 
 def ask_gemini(client, p, key):
     """ask nicely"""
+    prompt = '''
+        you are a tutor generating flashcards for your student client. this is an image from a lecture deck.
+        i want you to generate flaschards for all relevant facts, any understanding questions.
+        if the slide is information heavy focus on recall.
+        if the slide is a problem ask the problem.
+        if the slide has any images that you might base a question on describe the image. 
+        if difficult to describe the image focus on what the question you might want to ask is testing,
+        then test with a flashcard in a different way.
+        focus on making connections, diagrams. feel free to make ascii diagram-like questions, flowcharts..
+
+        i want you to generate them in the format
+        <CARD>
+            <QUESTION>...</QUESTION>
+            <ANSWER>...</ANSWER>
+        </CARD>
+        do not say anything else. just output a stream of CARDs
+    '''
+
+
     response = client.models.generate_content(
         model='gemini-2.0-flash-exp',
-        contents=['whats going on here',
+        contents=[prompt,
             types.Part(
                 inline_data=types.Blob(data=p, mime_type='image/png')
             )
@@ -36,15 +55,19 @@ def ask_gemini(client, p, key):
     )
 
     print(response.text)
+    return response.text
 
 def run_agent(client, pages, key):
     """run queries"""
+    stream = []
+
     for p in pages:
         img = open(p, 'rb').read()
-        ask_gemini(client, img, key)
-
+        stream.append(ask_gemini(client, img, key))
         # dont want to get rate limited
-        sleep(2) 
+        sleep(10) 
+
+    out = ''.join(stream)
     
 def main():
     # .env file
