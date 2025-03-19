@@ -1,5 +1,3 @@
-import asyncio
-import base64
 import os
 import pymupdf
 import json
@@ -9,6 +7,7 @@ from google import genai
 from google.genai import types
 from typing import List 
 from pydantic import BaseModel
+from create_note import create_note
 
 def read_pdf(doc):
     """read pages as images"""
@@ -18,6 +17,7 @@ def read_pdf(doc):
         img = p.get_pixmap()
         # TODO: parameterize folder, path name to organize slide decks 
         path = f'./img/page-{i}.png'
+
         try:
             img.save(path)
         except Exception as e:
@@ -65,17 +65,36 @@ def ask_gemini(client, p, key):
     res_json = json.loads(response.text)
     return res_json
 
-def run_agent(client, pages, key):
-    """run queries"""
-    stream = []
+def get_cards(client, pages, key):
+    """get all cards"""
+    cards = []
 
     for p in pages[:2]:
         img = open(p, 'rb').read()
         print('read image')
-        stream.append(ask_gemini(client, img, key))
-        print('done query')
+
+        obj = ask_gemini(client, img, key)
+
+        for card in obj['cards']:
+            cards.append(card)
+
+        print('done query. sleeping for 10 secs..')
+
         # dont want to get rate limited
         sleep(10) 
+
+    return cards
+
+
+def run_agent(client, pages, key):
+    """run queries"""
+    cards = get_cards(client, pages, key)
+
+    questions = [c['question'] for c in cards]
+    answers = [c['answer'] for c in cards]
+
+    for question, answer in zip(questions, answers):
+        create_note(question, answer)
 
 def main():
     # .env file
@@ -95,4 +114,6 @@ def main():
 
 if __name__ == '__main__':
     load_dotenv()
+    print('loaded env')
+
     main()
