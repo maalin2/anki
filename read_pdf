@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import pymupdf
 import json
@@ -15,19 +17,18 @@ def read_pdf(doc):
     
     for i, p in enumerate(doc):
         img = p.get_pixmap()
-        # TODO: parameterize folder, path name to organize slide decks 
         path = f'./img/page-{i}.png'
 
         try:
             img.save(path)
         except Exception as e:
-            print(f'error {e}')
+            exit(1)
 
         paths.append(path)
 
     return paths
 
-def ask_gemini(client, p, key):
+def ask_gemini(client, p):
     """ask nicely"""
 
     prompt = '''
@@ -65,20 +66,17 @@ def ask_gemini(client, p, key):
     res_json = json.loads(response.text)
     return res_json
 
-def get_cards(client, pages, key):
+def get_cards(client, pages):
     """get all cards"""
     cards = []
 
-    for p in pages[:2]:
+    for p in pages:
         img = open(p, 'rb').read()
-        print('read image')
 
-        obj = ask_gemini(client, img, key)
+        obj = ask_gemini(client, img)
 
         for card in obj['cards']:
             cards.append(card)
-
-        print('done query. sleeping for 10 secs..')
 
         # dont want to get rate limited
         sleep(10) 
@@ -88,13 +86,13 @@ def get_cards(client, pages, key):
 
 def run_agent(client, pages, key):
     """run queries"""
-    cards = get_cards(client, pages, key)
+    cards = get_cards(client, pages)
 
     questions = [c['question'] for c in cards]
     answers = [c['answer'] for c in cards]
 
     for question, answer in zip(questions, answers):
-        create_note(question, answer)
+        print(f'{question}@@@{answer}')
 
 def main():
     # .env file
@@ -102,18 +100,12 @@ def main():
     path = os.environ.get('FILE_PATH')
 
     doc = pymupdf.open(path)
-    print('loaded doc')
-
     pages = read_pdf(doc)
-    print('saved images')
 
     client = genai.Client(api_key=key)
-    print('loaded gemini client')
 
     run_agent(client, pages, key)
 
 if __name__ == '__main__':
     load_dotenv()
-    print('loaded env')
-
     main()

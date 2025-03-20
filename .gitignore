@@ -1,12 +1,12 @@
-# dont worry about it
+.env
+
+# personal notes
 TODO 
 notes
 
 # binary
 *.pdf
 img/
-
-.env
 
 # venv stuff
 bin/
